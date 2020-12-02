@@ -5,10 +5,10 @@
 - [gaea kingshard hash分片示例](#gaea_kingshard_hash)
 
 <h3 id="gaea_ini">gaea本地启动配置</h3>
-```ini
+```shell script
 ; config type, etcd/file, you can test gaea with file type, you shoud use etcd in production
 config_type=file
-;file config path, 具体配置放到file_config_path的namespace目录下，该下级目录为固定目录
+;file config path, 具体配置放到file_config_path的namespace目录下,该下级目录为固定目录
 file_config_path=./etc/file
 
 ;coordinator addr
@@ -52,11 +52,9 @@ stats_interval=10
 
 ;encrypt key
 encrypt_key=1234abcd5678efg*
-
 ```
 
 <h3 id="gaea_kingshard_hash">gaea kingshard hash分片示例</h3>
-
 #### 创建数据库表
 我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308
 ```shell script
