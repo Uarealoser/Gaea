@@ -5,7 +5,9 @@
 
 <h3 id="gaea_kingshard_hash">gaea kingshard hash分片示例</h3>
 #### 创建数据库表
+
 我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308
+
 ```shell script
 #连接3307数据库实例
 mysql -h127.0.0.1 -P3307 -uroot -p1234
