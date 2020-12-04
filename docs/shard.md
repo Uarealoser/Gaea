@@ -15,15 +15,14 @@ Gaea支持kingshard常用分表规则, 对应关系如下:
 | date_day         | date_day   |
 
 ##### hash
-
-我们想将`db_kingshard`库的`tbl_kingshard`表配置为分片表, 共4个分片表, 分布到2个slice上, 每个slice上有1个库, 每个库2张表, 即:
+我们想将`db_example`库的`tbl_example`表配置为分片表, 共4个分片表, 分布到2个slice上, 每个slice上有1个库, 每个库2张表, 即:
 
 | slice | 后端数据库名 | 后端表名 |
 | ----- | ---------- | ------- |
-| slice-0 | db_kingshard | tbl_kingshard_0000 |
-| slice-0 | db_kingshard | tbl_kingshard_0001 |
-| slice-1 | db_kingshard | tbl_kingshard_0002 |
-| slice-1 | db_kingshard | tbl_kingshard_0003 |
+| slice-0 | db_example | tbl_example_0000 |
+| slice-0 | db_example | tbl_example_0001 |
+| slice-1 | db_example | tbl_example_0002 |
+| slice-1 | db_example | tbl_example_0003 |
 
 则namespace配置文件中的分片表规则可参考以下示例配置:
 
@@ -34,8 +33,8 @@ Gaea支持kingshard常用分表规则, 对应关系如下:
 // "shard_rules": [
 
 {
-    "db": "db_kingshard",
-    "table": "tbl_kingshard",
+    "db": "db_example",
+    "table": "tbl_example",
     "type": "hash",
     "key": "id",
     "locations": [
@@ -50,6 +49,229 @@ Gaea支持kingshard常用分表规则, 对应关系如下:
 
 // ]
 ```
+
+该配置中的location字段数组下标0代表slice-0，下标1代表slice-1。数组中的数组代表对应分片上的分表数，这里都是2。
+key字段代表用于hash的数据库表列，这里为表中列名为id的列。
+
+##### mod
+我们想将`db_example`库的`shard_mod`表配置为分片表, 共4个分片表, 分布到2个slice上, 每个slice上有1个库, 每个库2张表, 即:
+
+| slice | 后端数据库名 | 后端表名 |
+| ----- | ---------- | ------- |
+| slice-0 | db_example | shard_mod_0000 |
+| slice-0 | db_example | shard_mod_0001 |
+| slice-1 | db_example | shard_mod_0002 |
+| slice-1 | db_example | shard_mod_0003 |
+
+则namespace配置文件中的分片表规则可参考以下示例配置:
+
+```
+// namespace配置文件
+// {
+// ...
+// "shard_rules": [
+
+{
+    "db": "db_example",
+    "table": "shard_mod",
+    "type": "mod",
+    "key": "id",
+    "locations": [
+        2,
+        2
+    ],
+    "slices": [
+        "slice-0",
+        "slice-1"
+    ]
+}
+
+// ]
+```
+
+该配置中的location字段数组下标0代表slice-0，下标1代表slice-1。数组中的数组代表对应分片上的分表数，这里都是2。
+key字段代表用于mod的数据库表列，这里为表中列名为id的列。
+
+##### range
+range分表方式说明：
+基于整数范围划分来得到子表下标。该方式的优点：基于范围的查询或更新速度快，因为查询（或更新）的范围有可能落在同一张子表中。这样可以避免全部子表的查询（更新）。缺点：数据热点问题。因为在一段时间内整个集群的写压力都会落在一张子表上。此时整个mysql集群的写能力受限于单台mysql server的性能。并且，当正在集中写的mysql 节点如果宕机的话，整个mysql集群处于不可写状态。基于range方式的分表字段类型受限。
+
+我们想将`db_example`库的`tbl_example`表配置为分片表, 共4个分片表, 分布到2个slice上, 每个slice上有1个库, 每个库2张表, 即:
+
+| slice | 后端数据库名 | 后端表名 |
+| ----- | ---------- | ------- |
+| slice-0 | db_example | tbl_example_0000 |
+| slice-0 | db_example | tbl_example_0001 |
+| slice-1 | db_example | tbl_example_0002 |
+| slice-1 | db_example | tbl_example_0003 |
+
+则namespace配置文件中的分片表规则可参考以下示例配置:
+
+```
+// namespace配置文件
+// {
+// ...
+// "shard_rules": [
+
+{
+    "db": "db_example",
+    "table": "tbl_example",
+    "type": "range",
+    "key": "id",
+    "locations": [
+        2,
+        2
+    ],
+    "slices": [
+        "slice-0",
+        "slice-1"
+    ],
+    "table_row_limit": 100
+}
+
+// ]
+```
+
+配置说明：
+-   该配置中的location字段数组下标0代表slice-0，下标1代表slice-1。数组中的数组代表对应分片上的分表数，这里都是2。
+-   key字段代表用于range计算的数据库表列，这里为表中列名为id的列。
+-   table_row_limit字段的值为100，代表每张子表的记录数。id字段的值为[0,100)在tbl_example_0000上，[100,200)在tbl_example_0001上,依此类推...
+
+##### date_year
+gaea 支持Mysql中三种格式的时间类型
+-   date类型，格式：YYYY-MM-DD，例如:2016-03-04,注意：2016-3-04，2016-03-4，2016-3-4等格式都是不支持的。
+-   datetime，格式：YYYY-MM-DD HH:MM:SS，例如:2016-03-04 13:23:43,注意：2016-3-04 13:23:43，2016-03-4 13:23:43，2016-3-4 13:23:43等格式都是不支持的。
+-   timestamp，整数类型。
+
+我们想将`db_example`库的`shard_year`表配置为分片表, 共4个分片表, 分布到2个slice上, 每个slice上有1个库, 每个库2张表, 即:
+
+| slice | 后端数据库名 | 后端表名 |
+| ----- | ---------- | ------- |
+| slice-0 | db_example | shard_year_2016 |
+| slice-0 | db_example | shard_year_2017 |
+| slice-1 | db_example | shard_year_2018 |
+| slice-1 | db_example | shard_year_2019 |
+
+则namespace配置文件中的分片表规则可参考以下示例配置:
+
+```
+// namespace配置文件
+// {
+// ...
+// "shard_rules": [
+
+{
+    "db": "db_example",
+    "table": "shard_year",
+    "type": "date_year",
+    "key": "create_time",
+    "slices": [
+        "slice-0",
+        "slice-1"
+    ]
+   "date_range": [
+        "2016-2017",
+        "2018-2019"
+    ]
+}
+
+// ]
+```
+
+配置说明：
+-   该配置表示shardding key是create_time
+-   按年的分类类型是date_year
+-   shard_year_2016、shard_year_2017两个表在slice-0上，shard_year_2018、shard_year_2019在slice-1上。
+
+注意：子表的命名格式必须是:shard_table_YYYY，shard_table是分表名，后面接具体的年。传入范围必须是有序递增，不能是[2018-2019,2016-2017]，且不能重叠，不能是[2017-2018,2018-2019]。
+
+##### date_month
+我们想将`db_example`库的`shard_month`表配置为分片表, 共4个分片表, 分布到2个slice上, 每个slice上有1个库, 每个库2张表, 即:
+
+| slice | 后端数据库名 | 后端表名 |
+| ----- | ---------- | ------- |
+| slice-0 | db_example | shard_month_201405 |
+| slice-0 | db_example | shard_month_201406 |
+| slice-1 | db_example | shard_month_201408 |
+| slice-1 | db_example | shard_month_201409 |
+
+则namespace配置文件中的分片表规则可参考以下示例配置:
+
+```
+// namespace配置文件
+// {
+// ...
+// "shard_rules": [
+
+{
+    "db": "db_example",
+    "table": "shard_month",
+    "type": "date_month",
+    "key": "create_time",
+    "slices": [
+        "slice-0",
+        "slice-1"
+    ]
+    "date_range": [
+         "201405-201406",
+         "201408-201409"
+    ]
+}
+
+// ]
+```
+
+配置说明：
+-   sharding key 是create_time
+-   按月的分表类型是date_month
+-   shard_month_201405、shard_month_201406两个子表在slice-0上，shard_month_201408、shard_month_201409在slice-1上
+-   如果一个分片上只包含一张表，可以这样配置date_range[201609,201610-201611]
+
+注意：子表的命名格式必须是:shard_table_YYYYMM,shard_table是分表名，后面接具体的年和月。传入范围必须是有序递增的，不能是[201609-201610,201501]。
+
+##### date_day
+我们想将`db_example`库的`shard_day`表配置为分片表, 共4个分片表, 分布到2个slice上, 每个slice上有1个库, 每个库2张表, 即:
+
+| slice | 后端数据库名 | 后端表名 |
+| ----- | ---------- | ------- |
+| slice-0 | db_example | shard_day_20201201 |
+| slice-0 | db_example | shard_day_20201202 |
+| slice-1 | db_example | shard_day_20201203 |
+| slice-1 | db_example | shard_day_20201204 |
+
+则namespace配置文件中的分片表规则可参考以下示例配置:
+
+```
+// namespace配置文件
+// {
+// ...
+// "shard_rules": [
+
+{
+    "db": "db_example",
+    "table": "shard_day",
+    "type": "date_day",
+    "key": "create_time",
+    "slices": [
+        "slice-0",
+        "slice-1"
+    ]
+    "date_range": [
+         "20201201-20201202",
+         "20201203-20201204"
+    ]
+}
+
+// ]
+```
+
+配置说明：
+-   sharding key 是create_time
+-   按月的分表类型是date_day
+-   shard_day_20201201、shard_day_20201202两个子表在slice-0上，shard_day_20201203、shard_day_20201204在slice-1上
+-   如果一个分片上只包含一张表，可以这样配置date_range[20160901,20161001-20161101]
+
+注意：子表的命名格式必须是:shard_table_YYYYMMDD,shard_table是分表名，后面接具体的年、月和日。传入范围必须是有序递增的，不能是[20160901-20160902,20150901]。
 
 ### mycat分库配置
 
