@@ -2,8 +2,6 @@
 
 Gaea支持kingshard分表规则和mycat分库规则, 用户可以在不迁移任何数据的情况下, 从kingshard和mycat切换到Gaea.
 
-如需要了解详细库表对照示例，可以查看[分片规则示例说明](shard-example.md)
-
 ### kingshard分表配置
 
 Gaea支持kingshard常用分表规则, 对应关系如下:
@@ -52,7 +50,7 @@ Gaea支持kingshard常用分表规则, 对应关系如下:
 // ]
 ```
 
-该配置中的location字段数组下标0代表slice-0，下标1代表slice-1。数组中的数组代表对应分片上的分表数，这里都是2。
+该配置中的location字段数组下标0代表slice-0，下标1代表slice-1。数组中的数代表对应分片上的分表数，这里都是2。
 key字段代表用于hash的数据库表列，这里为表中列名为id的列。
 
 ##### mod
@@ -380,8 +378,11 @@ mycat_long的配置规则如下:
 -   partition_count标识分片个数，需要与设置的分片数量相等，由于定义了4个分片，因此这里只能是4、partition_length分片范围列表。
     
     因此这里的组合可以是:"partition_count":"4"、"partition_length"："256"代表希望将数据水平分成4份，每份各占25%。
+    
     也可以是"partition_count":"2,2"、"partition_length"："128,384"代表希望将数据水平分成4份，前两份占128/1024、后两份占384/1024。
+    
     如果初始化了3个分片，则可以是:"partition_count":"3"、"partition_length"："256,512"代表希望将数据水平分成3份，前两份各占25%，第三份占50%。
+    
 -   分区长度：默认为最大2^n=1024 ,即最大支持1024分区。
 -   约束：1024 = sum((count[i]*length[i])). count和length两个向量的点积恒等于1024。如上述示例中，4*256=1024、128*2+384*2=1024、256*2+512=1024。
 
@@ -448,8 +449,9 @@ mycat_string的配置规则如下:
 
 -   partition_count代表分区数、partition_length代表字符串hash求模基数、hash_slice是hash运算位即根据子字符串hash运算.
 
-例1：值“45abc”，hash运算位0:2 ，取其中45进行计算
-例2：值“aaaabbb2345”，hash预算位-4:0 ，取其中2345进行计算
+-   例1：值“45abc”，hash运算位0:2 ，取其中45进行计算
+
+-   例2：值“aaaabbb2345”，hash预算位-4:0 ，取其中2345进行计算
 
 
 

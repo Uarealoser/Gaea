@@ -15,7 +15,7 @@
 <h2 id="gaea_kingshard_hash">gaea kingshard hash分片示例</h2>
 
 ### 创建数据库表
-我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice预定义2张表
+我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice定义一个库，每个库预定义2张表
 
 ```shell script
 #连接3307数据库实例
@@ -189,7 +189,7 @@ mysql>  select * from shard_hash_0003;
 <h2 id="gaea_kingshard_mod">gaea kingshard mod分片示例</h2>
 
 ### 创建数据库表
-我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice预定义2张表
+我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice定义一个库，每个库预定义2张表
 
 ```shell script
 #连接3307数据库实例
@@ -387,7 +387,7 @@ mysql> select * from shard_mod;
 <h2 id="gaea_kingshard_range">gaea kingshard range分片示例</h2>
 
 ### 创建数据库表
-我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice预定义2张表
+我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice定义一个库，每个库预定义2张表
 
 ```shell script
 #连接3307数据库实例
@@ -565,7 +565,7 @@ mysql> select * from shard_range_0003;
 <h2 id="gaea_kingshard_date_year">gaea kingshard date year分片示例</h2>
 
 ### 创建数据库表
-我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice预定义2张表
+我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice定义一个库，每个库预定义2张表
 
 ```shell script
 #连接3307数据库实例
@@ -733,7 +733,7 @@ mysql> select * from shard_year_2019;
 <h2 id="gaea_kingshard_date_month">gaea kingshard date month分片示例</h2>
 
 ### 创建数据库表
-我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice预定义2张表
+我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice定义一个库，每个库预定义2张表
 
 ```shell script
 #连接3307数据库实例
@@ -903,21 +903,21 @@ mysql> select * from shard_month_201409;
 <h2 id="gaea_kingshard_date_day">gaea kingshard date day分片示例</h2>
 
 ### 创建数据库表
-我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice预定义2张表
+我们预定义两个分片slice-0、slice-1，分别位于两个数据库实例端口为3307、3308，每个slice定义一个库，每个库预定义2张表
 
 ```shell script
 #连接3307数据库实例
 mysql -h127.0.0.1 -P3307 -uroot -p1234
 #创建数据库
 create database db_kingshard;
-#在命令行执行以下命令，创建分表,shard_month_201405、shard_month_201406
+#在命令行执行以下命令，创建分表,shard_month_201405、shard_day_20201201、shard_day_20201202
 for i in `seq 1 2`;do  mysql -h127.0.0.1 -P3307 -uroot -p1234  db_kingshard -e "CREATE TABLE IF NOT EXISTS shard_day_2020120"${i}" ( id INT(64) NOT NULL, col1 VARCHAR(256),create_time datetime DEFAULT NULL,PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8;";done
 
 #连接3306数据库实例
 mysql -h127.0.0.1 -P3308 -uroot -p1234
 #创建数据库
 create database db_kingshard;
-#在命令行执行以下命令，创建分表,shard_month_201408、shard_month_201409
+#在命令行执行以下命令，创建分表,shard_day_20201203、shard_day_20201204
 for i in `seq 3 4`;do  mysql -h127.0.0.1 -P3308 -uroot -p1234  db_kingshard -e "CREATE TABLE IF NOT EXISTS shard_day_2020120"${i}" ( id INT(64) NOT NULL, col1 VARCHAR(256),create_time datetime DEFAULT NULL,PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8;";done
 #登录3307实例，查询slice-0分片表展示：
 mysql> show tables;
