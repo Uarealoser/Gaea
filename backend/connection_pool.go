@@ -126,14 +126,6 @@ func (cp *connectionPoolImpl) Get(ctx context.Context) (PooledConnect, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	err = cp.tryReuse(r.(*pooledConnectImpl))
-	if err != nil {
-		r.Close()
-		cp.Put(nil)
-		return nil, err
-	}
-
 	return r.(*pooledConnectImpl), nil
 }
 
@@ -143,11 +135,15 @@ func (cp *connectionPoolImpl) Put(pc PooledConnect) {
 	if p == nil {
 		panic(ErrConnectionPoolClosed)
 	}
+
 	if pc == nil {
 		p.Put(nil)
-		return
+	} else if err := cp.tryReuse(pc.(*pooledConnectImpl)); err != nil {
+		pc.Close()
+		p.Put(nil)
+	} else {
+		p.Put(pc)
 	}
-	p.Put(pc)
 }
 
 // SetCapacity alert the size of the pool at runtime
